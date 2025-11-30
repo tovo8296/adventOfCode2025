@@ -1,0 +1,26 @@
+package util
+
+data class Coord(val x: Int, val y: Int) {
+
+    inline fun forEachNeighbor(block: (coord: Coord) -> Unit) {
+        Direction.entries.forEach {
+            block(move(it))
+        }
+    }
+
+    inline fun forEachStraightNeighbor(block: (coord: Coord) -> Unit) {
+        Direction.straightEntries.forEach { dir ->
+            block(move(dir))
+        }
+    }
+
+    fun move(direction: Direction): Coord = Coord(x + direction.dx, y + direction.dy)
+
+    fun <T> get(world: List<List<T>>): T? = world.getOrNull(y)?.getOrNull(x)
+
+    fun isValid(world: List<List<Any>>): Boolean {
+        return x >= 0 && y >= 0 && y < world.size && x < world[y].size
+    }
+}
+
+data class Coord3D(val x: Int, val y: Int, val z: Int)
