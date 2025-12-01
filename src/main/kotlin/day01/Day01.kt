@@ -6,20 +6,24 @@ fun main() {
     val rotations = input.lines().map { parseRotation(it) }
 
     var currentValue = 50
-    var zeroCount = 0
+    var finalZeroCount = 0
+    var allZeroCount = 0
     rotations.forEach {
-        currentValue = rotate(currentValue, it)
+        allZeroCount += it.value / 100
+        val shortenedValue = it.value % 100
+        val sign = if (it.right) 1 else -1
+        val delta = sign * shortenedValue
+        val sum = currentValue + delta
+        if (currentValue != 0 && (sum >= 100 || sum <= 0)) {
+            allZeroCount++
+        }
+        currentValue = (sum + 100) % 100
         if (currentValue == 0) {
-            zeroCount++
+            finalZeroCount++
         }
     }
-    println("Zeros: $zeroCount")
-}
-
-fun rotate(source: Int, rotation: Rotation): Int {
-    val sign = if (rotation.right) 1 else -1
-    val delta = sign * rotation.value
-    return (source + delta + 100) % 100
+    println("Final Zeros: $finalZeroCount")
+    println("All Zeros: $allZeroCount")
 }
 
 fun parseRotation(it: String): Rotation {
