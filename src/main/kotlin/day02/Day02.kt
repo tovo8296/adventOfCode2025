@@ -12,12 +12,15 @@ fun findInvalidIDs(range: LongRange): List<Long> {
 
 fun isInvalidId(n: Long): Boolean {
     val s = n.toString()
-    if (s.length % 2 != 0) {
-        return false
+    val len = s.length
+    return (1 ..len / 2).any { partLen ->
+        if (len % partLen != 0) {
+            false
+        }else {
+            val part = s.substring(0, partLen)
+            part.repeat(len / partLen)== s
+        }
     }
-    val p1 = s.substring(0, s.length / 2)
-    val p2 = s.substring(s.length / 2)
-    return p1 == p2
 }
 
 fun parse(line: String): List<LongRange> {
