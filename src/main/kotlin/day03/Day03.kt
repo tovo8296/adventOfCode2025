@@ -2,14 +2,19 @@ package day03
 
 fun main() {
     val banks = input.lines().map { it.map { it.toString().toInt() } }
-    val sum = banks.map { calcMaxJoltage(it) }.sum()
+    val sum = banks.map { calcMaxJoltage(it, 0, 12) }.sum()
     println("Joltage sum: $sum")
 }
 
-fun calcMaxJoltage(bank: List<Int>): Int {
-    val n1 = bank.dropLast(1).max()
-    val n2 = bank.drop(bank.indexOf(n1) + 1).max()
-    return n1 * 10 + n2
+fun calcMaxJoltage(bank: List<Int>, numberPrefix: Long, remainingDigits: Int): Long {
+    if (remainingDigits == 0) {
+        return numberPrefix
+    }
+    val digit = bank.dropLast(remainingDigits - 1).max()
+    val index = bank.indexOf(digit)
+    val restBank = bank.drop(index + 1)
+    val newPrefix = numberPrefix * 10 + digit
+    return calcMaxJoltage(restBank, newPrefix, remainingDigits - 1)
 }
 
 val input = """
