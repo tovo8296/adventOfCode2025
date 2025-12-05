@@ -1,19 +1,49 @@
 package day05
 
+import kotlin.math.max
+import kotlin.math.min
+
 fun main() {
     val split = input.indexOfFirst { it.trim().isEmpty() }
     val freshRanges = input.take(split).map { parseRange(it) }
     val ids = input.drop(split + 1).map { it.toLong() }
 
     val fresh = ids.count { id -> freshRanges.any { it.contains(id) } }
-    println("total: ${ids.size}, fresh: $fresh")
+    println("total IDs: ${ids.size}, fresh: $fresh")
 
+    val ranges = freshRanges.toMutableList()
+    while(tryCompact(ranges));
+    val freshRangesSize = ranges.sumOf { it.last - it.first + 1 }
+//    println("Fresh ranges: ${ranges.joinToString()}")
+    println("Fresh Ranges: $freshRangesSize")
 }
+
+fun tryCompact(ranges: MutableList<LongRange>): Boolean {
+    ranges.forEachIndexed { i1, r1 ->
+        (i1 + 1 until ranges.size).forEach { i2 ->
+            val r2 = ranges[i2]
+            if (canCompact(r1, r2)) {
+                val rNew = compact(r1, r2)
+                ranges[i1] = rNew
+                ranges.removeAt(i2)
+                return true
+            }
+        }
+    }
+    return false
+}
+
+fun canCompact(r1: LongRange, r2: LongRange): Boolean =
+     r1.contains(r2.first) || r1.contains(r2.last) || r2.contains(r1.first) || r2.contains(r1.last)
+
+fun compact(r1: LongRange, r2: LongRange): LongRange =
+    (min(r1.first, r2.first) .. max(r1.last, r2.last))
 
 fun parseRange(line: String): LongRange {
     val split = line.split("-")
     return (split[0].toLong() .. split[1].toLong())
 }
+
 
 val input = """
 3384729050352-7936448865239
