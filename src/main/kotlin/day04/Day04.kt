@@ -6,18 +6,40 @@ val Forklift = '@'
 val Empty = '.'
 
 fun main() {
-    val map = input.lines().map { it.toList() }
+    val map = input.lines().map { it.toMutableList() }
 
     var canLift = 0
     map.forEachIndexed { y, line ->
         line.forEachIndexed { x, c ->
-            if (c == Forklift && countAdjacentForklifts(map, Coord(x, y)) < 4) {
+            if (canRemoveForklift(map, Coord(x, y))) {
                 canLift++
             }
         }
     }
     println("Can lift $canLift rolls")
+
+    var removed = 0
+    while(tryRemove(map)) {
+        removed++
+    }
+    println("Removed $removed rolls")
+
 }
+
+fun tryRemove(map: List<MutableList<Char>>): Boolean {
+    map.forEachIndexed { y, line ->
+        line.forEachIndexed { x, c ->
+            if (canRemoveForklift(map, Coord(x, y))) {
+                map[y][x] = Empty
+                return true
+            }
+        }
+    }
+    return false
+}
+
+private fun canRemoveForklift(map: List<List<Char>>, coord: Coord) =
+    coord.get(map) == Forklift && countAdjacentForklifts(map, coord) < 4
 
 fun countAdjacentForklifts(map: List<List<Char>>, source: Coord): Int {
     var forklifts = 0
