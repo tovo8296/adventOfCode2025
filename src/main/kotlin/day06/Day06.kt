@@ -8,7 +8,8 @@ enum class Operator {
 }
 
 fun main() {
-    val problems = parseInput(input)
+//    val problems = parseInputHorizontal(input)
+    val problems = parseVertical(input)
     val solutions = problems.map { solve(it) }
     val sum = solutions.sum()
     println("Sum of solutions: $sum")
@@ -16,27 +17,54 @@ fun main() {
 
 fun solve(problem: Problem): Long {
     return when (problem.operator) {
-        Operator.Plus -> problem.numbers.fold(0L, {acc, value -> acc + value.toLong()})
-        Operator.Mult -> problem.numbers.fold(1L, {acc, value -> acc * value.toLong()})
+        Operator.Plus -> problem.numbers.fold(0L, { acc, value -> acc + value.toLong() })
+        Operator.Mult -> problem.numbers.fold(1L, { acc, value -> acc * value.toLong() })
     }
 }
 
-fun parseInput(string: String): List<Problem> {
+fun parseVertical(input: String): List<Problem> {
+    val lines = input.lines()
+    val columns = (0 until lines[0].length).map { i ->
+        lines.map { it[i] }.joinToString("")
+    }
+    val problems = mutableListOf<Problem>()
+    var op: Operator? = null
+    var numbers = mutableListOf<Int>()
+    columns.forEach { col ->
+        if (col.trim().isEmpty()) {
+            problems.add(Problem(op!!, numbers))
+            op = null
+            numbers = mutableListOf()
+        } else {
+            if (col.endsWith("+") || col.endsWith("*")) {
+                op = parseOperator(col.last().toString())
+            }
+            numbers.add(col.take(4).trim().toInt())
+        }
+    }
+    problems.add(Problem(op!!, numbers))
+    return problems
+}
+
+
+fun parseInputHorizontal(string: String): List<Problem> {
     val lineTokens = string.lines().map { it.trim().split(" +".toRegex()) }
     val numberLines = (0..3).map {
         lineTokens[it].map { it.toInt() }
     }
     val ops = lineTokens[4].map {
-        when (it) {
-            "+" -> Operator.Plus
-            "*" -> Operator.Mult
-            else -> throw RuntimeException("Unknown operator '$it'")
-        }
+        parseOperator(it)
     }
     val problems = ops.mapIndexed { i, op ->
         Problem(op, numberLines.map { it[i] })
     }
     return problems
+}
+
+private fun parseOperator(s: String): Operator = when (s) {
+    "+" -> Operator.Plus
+    "*" -> Operator.Mult
+    else -> throw RuntimeException("Unknown operator '$s'")
 }
 
 val input = """
