@@ -1,42 +1,43 @@
 package day07
 
-import util.Coord
-import util.findCoord
-import util.get
-import util.height
-import util.width
+import util.*
 
 val Splitter = '^'
 val Empty = '.'
 
+data class Timeline(val x: Int, var timelineCount: Long)
+
 fun main() {
     val map = input.lines().map { it.toList() }
     val start = map.findCoord { it == 'S' }!!
-    var beams = setOf(start.x)
+    var beams = listOf(Timeline(start.x, 1))
     var split = 0
     (1 until map.height).forEach {
-       val result = continueBeams(map, it, beams)
+        val result = continueBeams(map, it, beams)
         beams = result.first
         split += result.second
     }
 
+    val timelinesCount = beams.sumOf { it.timelineCount }
     println("Splits: $split")
+    println("Timelines: $timelinesCount")
 }
 
-fun continueBeams(map: List<List<Char>>, y: Int, beams: Set<Int>): Pair<Set<Int>, Int> {
-    val newBeams = mutableSetOf<Int>()
+fun continueBeams(map: List<List<Char>>, y: Int, beams: List<Timeline>): Pair<List<Timeline>, Int> {
+    val newBeams = mutableListOf<Timeline>()
     var split = 0
-    beams.forEach { x ->
+    beams.forEach { timeline ->
+        val x = timeline.x
         val c = map.get(Coord(x, y))
         when (c) {
-            Empty -> newBeams.add(x)
+            Empty -> addBeam(newBeams, timeline, x)
             Splitter -> {
                 split++
                 if (x > 0) {
-                    newBeams.add(x - 1)
+                    addBeam(newBeams, timeline, x - 1)
                 }
                 if (x < map.width - 1) {
-                    newBeams.add(x + 1)
+                    addBeam(newBeams, timeline, x + 1)
                 }
             }
             else -> throw RuntimeException("Unknown field '$c'")
@@ -45,6 +46,19 @@ fun continueBeams(map: List<List<Char>>, y: Int, beams: Set<Int>): Pair<Set<Int>
     return Pair(newBeams, split)
 }
 
+fun addBeam(
+    newBeams: MutableList<Timeline>,
+    sourceTimeline: Timeline,
+    x: Int
+) {
+    val index = newBeams.indexOfFirst { it.x == x }
+    if (index == -1) {
+        newBeams.add(Timeline(x, sourceTimeline.timelineCount))
+    } else {
+        val existing = newBeams[index]
+        existing.timelineCount += sourceTimeline.timelineCount
+    }
+}
 
 
 val input = """
