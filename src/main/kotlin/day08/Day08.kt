@@ -29,6 +29,36 @@ data class Machine(val coord: Coord3D) {
 fun main() {
     val machines = parse(input)
     val connections = calculateConnections(machines).sorted()
+    part1(connections, machines)
+    part2(connections, machines)
+}
+
+private fun part2(
+    connections: List<Connection>,
+    machines: List<Machine>
+) {
+    connections.forEach { con ->
+        con.machine1.connections += con
+        con.machine2.connections += con
+        if (allMachineConnected(machines)) {
+            val multX = con.machine1.coord.x * con.machine2.coord.x
+            println("Last connection: $con")
+            println("Mult-x: $multX")
+            return
+        }
+    }
+}
+
+fun allMachineConnected(machines: List<Machine>): Boolean {
+    val circuit = mutableSetOf<Machine>()
+    buildCircuit(circuit, machines.first())
+    return circuit.size == machines.size
+}
+
+private fun part1(
+    connections: List<Connection>,
+    machines: List<Machine>
+) {
     connections.take(1000).forEach { con ->
         con.machine1.connections += con
         con.machine2.connections += con
