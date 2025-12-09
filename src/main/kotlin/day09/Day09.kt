@@ -1,31 +1,70 @@
 package day09
 
 import util.Coord
+import util.intersects
+import util.toXRange
+import util.toYRange
 import kotlin.math.abs
-import kotlin.math.max
 
 fun main() {
     val tiles = parse(input)
-    val biggest = findBiggestRect(tiles)
-    println("biggest: $biggest")
+    val edges = createEdges(tiles)
+    val corners = findBiggestRect(tiles, edges)
+    val size = calcRectSize(corners.first, corners.second)
+    println("biggest rect: $corners, size: $size")
 }
 
-fun findBiggestRect(tiles: List<Coord>): Long {
-    var biggest = 0L
+
+fun findBiggestRect(tiles: List<Coord>, edges: List<Pair<Coord, Coord>>): Pair<Coord, Coord> {
+    var corners: Pair<Coord, Coord>? = null
+    var greatestSize = 0L
     tiles.forEachIndexed { index1, tile1 ->
         (index1 + 1 until tiles.size).forEach { index2 ->
             val tile2 = tiles[index2]
-            val size = calcRectSize(tile1, tile2)
-            biggest = max(biggest, size)
+            if (isConvex(edges, tile1, tile2)) {
+                val size = calcRectSize(tile1, tile2)
+                if (size > greatestSize) {
+                    greatestSize = size
+                    corners = tile1 to tile2
+                }
+            }
         }
     }
-    return biggest
+    return corners!!
 }
+
+fun isConvex(edges: List<Pair<Coord, Coord>>, rect1: Coord, rect2: Coord): Boolean =
+    edges.none { isEdgeCuttingRect(it, rect1, rect2) }
+
+fun isEdgeCuttingRect(edge: Pair<Coord, Coord>, rect1: Coord, rect2: Coord): Boolean {
+    if (edge.first == rect1 || edge.first == rect2 || edge.second == rect1 || edge.second == rect2) {
+        return false
+    }
+    val rectX = (rect1 to rect2).toXRange()
+    val rectY = (rect1 to rect2).toYRange()
+    return if (edge.first.y == edge.second.y) {
+        // horizontal
+        rectY.contains(edge.first.y) && rectX.intersects(edge.toXRange())
+    } else {
+        // vertical
+        rectX.contains(edge.first.x) && rectY.intersects(edge.toYRange())
+    }
+}
+
 
 fun calcRectSize(c1: Coord, c2: Coord): Long {
     val diffX = abs(c1.x - c2.x) + 1
     val diffY = abs(c1.y - c2.y) + 1
     return diffX.toLong() * diffY.toLong()
+}
+
+fun createEdges(tiles: List<Coord>): List<Pair<Coord, Coord>> {
+    val edges = mutableListOf<Pair<Coord, Coord>>()
+    (1 until tiles.size).forEach { i ->
+        edges.add(tiles[i - 1] to tiles[i])
+        edges.add(tiles.last() to tiles.first())
+    }
+    return edges
 }
 
 fun parse(s: String): List<Coord> {
@@ -34,6 +73,17 @@ fun parse(s: String): List<Coord> {
         Coord(n[0], n[1])
     }
 }
+
+val test = """
+7,1
+11,1
+11,7
+9,7
+9,5
+2,5
+2,3
+7,3
+""".trimIndent()
 
 val input = """
 98159,50267
