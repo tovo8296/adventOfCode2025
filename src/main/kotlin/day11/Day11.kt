@@ -1,21 +1,70 @@
 package day11
 
-data class Device(val name: String, var out: List<Device>)
+data class Device(val name: String, var out: List<Device>) {
+    var result: Result? = null
+}
+
+data class Result(
+    val pathsNone: Long,
+    val pathsDacFft: Long = 0,
+    val pathsDac: Long = 0,
+    val pathsFft: Long = 0,
+) {
+
+}
+
+val you = "you"
+val out = "out"
+val dac = "dac"
+val fft = "fft"
+val server = "svr"
 
 fun main() {
     val devices = parse(input)
-    val you = devices.find { it.name == "you" }!!
-    val pathsCounts = countPathsToOut(devices, you)
-    println("Paths from you to out: $pathsCounts")
+    val server = devices.find { it.name == server }!!
+    val pathsCounts = countPathsToOut(devices, server, listOf(server))
+    println("Paths from server to out: ${pathsCounts.pathsDacFft}")
 }
 
-fun countPathsToOut(devices: List<Device>, device: Device): Int {
-    if (device.name == "out") {
-        return 1
+fun countPathsToOut(devices: List<Device>, device: Device, path: List<Device>): Result {
+    if (device.name == out) {
+        return Result(pathsNone = 1)
     }
-    return device.out.sumOf {
-        countPathsToOut(devices, it)
+    val isFft = device.name == fft
+    val isDac = device.name == dac
+
+    var pathsNone = 0L
+    var pathsDacFft = 0L
+    var pathsDac = 0L
+    var pathsFft = 0L
+
+    device.out.forEach { next ->
+        if (!path.contains(next)) {
+            val nextResult = next.result ?: countPathsToOut(devices, next, path + next).also {
+                next.result = it
+            }
+            pathsDacFft += nextResult.pathsDacFft
+            if (isDac) {
+                pathsDacFft += nextResult.pathsFft
+                pathsDac += nextResult.pathsDac
+                pathsDac += nextResult.pathsNone
+            } else if (isFft) {
+                pathsDacFft += nextResult.pathsDac
+                pathsFft += nextResult.pathsFft
+                pathsFft += nextResult.pathsNone
+            } else {
+                pathsDac += nextResult.pathsDac
+                pathsFft += nextResult.pathsFft
+                pathsNone += nextResult.pathsNone
+            }
+        }
     }
+    return Result(
+        pathsNone = pathsNone,
+        pathsDac = pathsDac,
+        pathsFft = pathsFft,
+        pathsDacFft = pathsDacFft
+    )
 }
 
 fun parse(s: String): List<Device> {
@@ -25,7 +74,7 @@ fun parse(s: String): List<Device> {
         val outs = parts[1].trim().split(" ")
         name to outs
     }.toMutableMap()
-    data["out"] = emptyList()
+    data[out] = emptyList()
     val deviceMap = data.keys.associate { it to Device(it, emptyList()) }
     deviceMap.values.forEach { device ->
         device.out = data[device.name]!!.map {
